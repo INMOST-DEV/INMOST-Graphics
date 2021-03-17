@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(GridTools)
+project(Graphics)
 
 find_package(inmost REQUIRED)
 
