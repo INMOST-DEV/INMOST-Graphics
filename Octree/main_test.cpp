@@ -167,7 +167,7 @@ void send_dump_command()
 {
 	char buff[10][2];
 	MPI_Request req[10];
-	for (int i = 1; i < size; i++)
+	for (int i = 1; i < ::size; i++)
 	{
 		buff[i][0] = 'f'; // Special key, means dump file
 		MPI_Isend(buff[i], 1, MPI_CHAR, i, 0, INMOST_MPI_COMM_WORLD, req + i);
@@ -178,7 +178,7 @@ void send_quit_command()
 {
 	char buff[10][2];
 	MPI_Request req[10];
-	for (int i = 1; i < size; i++)
+	for (int i = 1; i < ::size; i++)
 	{
 		buff[i][0] = 'q'; // Special key, means dump file
 		MPI_Isend(buff[i], 1, MPI_CHAR, i, 0, INMOST_MPI_COMM_WORLD, req + i);
@@ -191,7 +191,7 @@ void send_coordinates_to_slaves(int action)
     char buff[MAX_PROCESSORS_COUNT][10];
     MPI_Request req[MAX_PROCESSORS_COUNT];
 
-    for (int i = 1; i < size; i++)
+    for (int i = 1; i < ::size; i++)
     {
         LOG(2,"Main process: send coordinates to " << i)
         buff[i][0] = 'm'; // Special key, means refine 
@@ -217,7 +217,7 @@ void redistribute_command()
         type = 1;
     }
    
-    for (int i = 1; i < size; i++)
+    for (int i = 1; i < ::size; i++)
     {
 		LOG(3,"Master: send redistribute command to slave " << ::rank)
         buff[i][0] = 'x'; // Special key, means redistribute
@@ -410,12 +410,12 @@ int main(int argc, char ** argv)
 
     	BARRIER
         LOG(2, ::rank << ": test completed. Average sends: " << double(sends)/double(iters_count))
-        int* g_sends = new int[size];
+        int* g_sends = new int[::size];
         MPI_Allgather(&sends, 1, MPI_INTEGER, g_sends, 1, MPI_INTEGER, MPI_COMM_WORLD);
 
         int av_sends = 0;
         if (::rank == 0) 
-            for (int i = 0; i < size; i++)
+            for (int i = 0; i < ::size; i++)
                 av_sends += g_sends[i];
     
 
@@ -424,7 +424,7 @@ int main(int argc, char ** argv)
 		if (::rank == 0) cout << "time = " << tt << endl;
 		if (::rank == 0) cout << "Average AMR time = " << a_amr/(iters_count - 1) << endl;
 		if (::rank == 0) cout << "Average RED time = " << a_red/(iters_count - 1) << endl;
-		if (::rank == 0) cout << "Average sends = " << int(double(av_sends)/double(iters_count*size)) << endl;
+		if (::rank == 0) cout << "Average sends = " << int(double(av_sends)/double(iters_count*::size)) << endl;
 		if (::rank == 0) cout << "time = " << tt << endl;
 
 		dump_to_vtk(&thegrid);

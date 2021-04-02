@@ -184,10 +184,10 @@ void motion(int nmx, int nmy) // Mouse
 	
 	if(draw_sem == 0 && draw_in_motion)
 	{
-        if (size > 0) send_coordinates_to_slaves(0);
+        if (::size > 0) send_coordinates_to_slaves(0);
         gridAMR(&thegrid, 0); 
         if (redist_after_amr) redistribute_command();
-        if (size > 0) refresh_slaves_grid();   
+        if (::size > 0) refresh_slaves_grid();   
         draw_sem = 1;
 	}
 
@@ -266,20 +266,20 @@ void mpi_draw()
         }
 
         // Draw other (slaves procs) faces
-        for (int i = 1; i < size; i++)
+        for (int i = 1; i < ::size; i++)
         {
             if (current_proc_draw != -1 && current_proc_draw != i) continue;
             set_color(i);
 
             if (i > 10 && i < 13)
             {
-                double colo = 40.0 + 215.0*(double(i - 11)/double(size - 11));
+                double colo = 40.0 + 215.0*(double(i - 11)/double(::size - 11));
                 colo /= 255;
                 glColor3f(colo, 0.3,0.3 );
             }
             if (i >= 13)
             {
-                double colo = 40.0 + 215.0*(double(i - 13)/double(size - 13));
+                double colo = 40.0 + 215.0*(double(i - 13)/double(::size - 13));
                 colo /= 255;
                 glColor3f(0.3,0.3,colo);
             }
@@ -333,7 +333,7 @@ void mpi_draw()
         // Draw other edges
         glLineWidth(2);
         glColor3f(0.0,   0.0   ,0.0);
-        for (int i = 1; i < size; i++)
+        for (int i = 1; i < ::size; i++)
         {
             if (current_proc_draw != -1 && current_proc_draw != i) continue;
             int gc = 0;
@@ -439,7 +439,7 @@ void send_coordinates_to_slaves(int action)
     char buff[MAX_PROCESSORS_COUNT][10];
     MPI_Request req[MAX_PROCESSORS_COUNT];
 
-    for (int i = 1; i < size; i++)
+    for (int i = 1; i < ::size; i++)
     {
         LOG(2,"Main process: send coordinates to " << i)
         buff[i][0] = 'm'; // Special key, means refine 
@@ -457,7 +457,7 @@ void refresh_slaves_grid()
 	if (::rank == 0) { // Send command to slaves for they will sent grid to us
         char buff1[10][2];
         MPI_Request req[10];
-        for (int i = 1; i < size; i++)
+        for (int i = 1; i < ::size; i++)
         {
             buff1[i][0] = 'r'; // Special key, means send mesh
             MPI_Isend(buff1[i], 1, MPI_CHAR, i, 0, INMOST_MPI_COMM_WORLD, req + i);
@@ -472,7 +472,7 @@ void refresh_slaves_grid()
     char nodes_count;
     char stat;
 
-    for (int i = 1; i < size; i++)
+    for (int i = 1; i < ::size; i++)
     {
         // First receive array of vertices of faces
         MPI_Recv(buff, MAX_NODES_COUNT * sizeof(double),MPI_CHAR,i,0,INMOST_MPI_COMM_WORLD, &status);
@@ -519,7 +519,7 @@ void refresh_slaves_grid()
 
 void prepare_to_correct_brothers()
 {
-	correct_brothers(&thegrid,size,::rank, 0);
+	correct_brothers(&thegrid,::size,::rank, 0);
     thegrid.mesh->RemoveGhost();
     thegrid.mesh->Redistribute(); 
     thegrid.mesh->ReorderEmpty(CELL|FACE|EDGE|NODE);
@@ -541,7 +541,7 @@ void redistribute_command()
         type = 1;
     }
    
-    for (int i = 1; i < size; i++)
+    for (int i = 1; i < ::size; i++)
     {
 		LOG(3,"Master: send redistribute command to slave " << ::rank)
         buff[i][0] = 'x'; // Special key, means redistribute
@@ -628,7 +628,7 @@ void keyboard(unsigned char key, int x, int y)
     {
         char buff[10][1];
         MPI_Request req[10];
-        for (int i = 1; i < size; i++)
+        for (int i = 1; i < ::size; i++)
         {
             buff[i][0] = 'c'; // Special key, means command
             MPI_Isend(buff[i], 1, MPI_CHAR, i, 0, INMOST_MPI_COMM_WORLD, req + i);
@@ -641,7 +641,7 @@ void keyboard(unsigned char key, int x, int y)
     {
         char buff[10][1];
         MPI_Request req[10];
-        for (int i = 1; i < size; i++)
+        for (int i = 1; i < ::size; i++)
         {
             buff[i][0] = 'u'; // Special key, means remove_ghost
             MPI_Isend(buff[i], 1, MPI_CHAR, i, 0, INMOST_MPI_COMM_WORLD, req + i);
@@ -683,7 +683,7 @@ void keyboard(unsigned char key, int x, int y)
             dump_to_vtk(&thegrid);
             char buff[10][2];
             MPI_Request req[10];
-            for (int i = 1; i < size; i++)
+            for (int i = 1; i < ::size; i++)
             {
                 buff[i][0] = 'f'; // Special key, means dump file
                 MPI_Isend(buff[i], 1, MPI_CHAR, i, 0, INMOST_MPI_COMM_WORLD, req + i);
@@ -702,7 +702,7 @@ void keyboard(unsigned char key, int x, int y)
         char buff[10][10];
         MPI_Request req[10];
 
-        for (int i = 1; i < size; i++)
+        for (int i = 1; i < ::size; i++)
         {
             buff[i][0] = 'z'; // Special key, means correct_brothers
             MPI_Isend(buff[i], 1, MPI_CHAR, i, 0, INMOST_MPI_COMM_WORLD, req + i);
@@ -712,13 +712,13 @@ void keyboard(unsigned char key, int x, int y)
 	if( key == '*' || key == '8' )
     {
         current_proc_draw++;
-        if (current_proc_draw == size) current_proc_draw = -1;
+        if (current_proc_draw == ::size) current_proc_draw = -1;
 	    glutPostRedisplay();
     }
 	if( key == '/' || key == '?' )
     {
         current_proc_draw--;
-        if (current_proc_draw == -2) current_proc_draw = size - 1;
+        if (current_proc_draw == -2) current_proc_draw = ::size - 1;
 	    glutPostRedisplay();
     }
 	if( key == 'e' || key == 'E' )
@@ -955,13 +955,13 @@ int main(int argc, char ** argv)
     {
 
         #if defined(USE_MPI)
-        drawing_faces     = new drawing_face*[size-1];
-        drawing_faces_n   = new int[size-1];
-        sub_edges_nodes   = new double*[size-1];
-        sub_edges_nodes_n = new int[size-1];
-        sub_edges_ghost   = new char*[size-1];
+        drawing_faces     = new drawing_face*[::size-1];
+        drawing_faces_n   = new int[::size-1];
+        sub_edges_nodes   = new double*[::size-1];
+        sub_edges_nodes_n = new int[::size-1];
+        sub_edges_ghost   = new char*[::size-1];
         
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < ::size; i++) {
             drawing_faces_n[i] = 0;
             drawing_faces[i] = new drawing_face[30000];
             sub_edges_nodes_n[i] = 0;
@@ -988,7 +988,7 @@ int main(int argc, char ** argv)
         glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
 
         glClearColor (1.0f, 1.0f, 1.0f, 1.f);
-        if (size > 1) glutDisplayFunc(mpi_draw);
+        if (::size > 1) glutDisplayFunc(mpi_draw);
         else glutDisplayFunc(draw);
         glutReshapeFunc(reshape);
 

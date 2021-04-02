@@ -37,8 +37,8 @@ void dump_to_vtk()
 
     std::stringstream filename;
     filename << "grids/grid_";
-    filename << size;
-    if( size == 1 )
+    filename << ::size;
+    if( ::size == 1 )
         filename << ".vtk";
     else
         filename << ".pvtk";
@@ -120,7 +120,7 @@ int cell_should_split(struct grid * g, Cell cell)
 
 void prepare_to_correct_brothers()
 {
-	correct_brothers(&thegrid,size,::rank, 0);
+	correct_brothers(&thegrid,::size,::rank, 0);
     thegrid.mesh->RemoveGhost();
     thegrid.mesh->Redistribute(); 
     thegrid.mesh->ReorderEmpty(CELL|FACE|EDGE|NODE);
@@ -145,7 +145,7 @@ void redistribute(int type)
 		TagInteger r = thegrid.mesh->RedistributeTag();
 		TagInteger o = thegrid.mesh->OwnerTag();
 		for(Mesh::iteratorCell it = thegrid.mesh->BeginCell(); it != thegrid.mesh->EndCell(); ++it)
-			r[it->self()] = (o[it->self()]+1)%size;
+			r[it->self()] = (o[it->self()]+1)%(::size);
 	}
 	else
 	{
@@ -168,7 +168,7 @@ void redistribute(int type)
 
 	//thegrid.mesh->Save("parmetis.pmf");
 
-	correct_brothers(&thegrid,size,::rank, 2);
+	correct_brothers(&thegrid,::size,::rank, 2);
 
 	//thegrid.mesh->Save("brothers.pmf");
 
