@@ -96,9 +96,11 @@ namespace INMOST
 	color_t color_bar::pick_color(float value) const
 	{
 		if (value < min)
-			return color_t(0.4, 1.0, 0.4);
+			//return color_t(0.4, 1.0, 0.4);
+			return color_t(1, 1, 1);
 		if (value > max)
-			return color_t(0, 0.6, 0);
+			//return color_t(0, 0.6, 0);
+			return color_t(0, 0, 0);
 		float t = (value - min) / (max - min);
 		std::vector<float>::const_iterator it = std::lower_bound(ticks.begin(), ticks.end(), t);
 		size_t pos = it - ticks.begin();
