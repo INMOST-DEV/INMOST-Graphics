@@ -74,8 +74,10 @@ namespace INMOST
 		*/
 
 		//inversed gnuplot color scheme
+
 		ticks.push_back(0.f);
 		ticks.push_back(0.05f);
+		ticks.push_back(0.25f);
 		ticks.push_back(0.5f);
 		ticks.push_back(0.75f);
 		ticks.push_back(0.95f);
@@ -83,10 +85,12 @@ namespace INMOST
 
 		colors.push_back(color_t(1, 1, 1));
 		colors.push_back(color_t(1, 1, 0));
+		colors.push_back(color_t(0.95, 0.4, 0));
 		colors.push_back(color_t(0.85, 0, 0));
 		colors.push_back(color_t(0.65, 0.25, 0.85));
 		colors.push_back(color_t(0.45, 0, 0.55));
-		colors.push_back(color_t(0, 0, 0));
+		//colors.push_back(color_t(0, 0, 0));
+		colors.push_back(color_t(0.25, 0.25, 0.25));
 
 		
 		//colors.push_back(color_t(1,0,0));
@@ -96,11 +100,11 @@ namespace INMOST
 	color_t color_bar::pick_color(float value) const
 	{
 		if (value < min)
-			//return color_t(0.4, 1.0, 0.4);
-			return color_t(1, 1, 1);
+			return color_t(0.4, 1.0, 0.4);
+			//return color_t(1, 1, 1);
 		if (value > max)
-			//return color_t(0, 0.6, 0);
-			return color_t(0, 0, 0);
+			return color_t(0, 0.6, 0);
+			//return color_t(0, 0, 0);
 		float t = (value - min) / (max - min);
 		std::vector<float>::const_iterator it = std::lower_bound(ticks.begin(), ticks.end(), t);
 		size_t pos = it - ticks.begin();
@@ -119,7 +123,7 @@ namespace INMOST
 	
 	void color_bar::InitTexture()
 	{
-		samples = 512	;
+		samples = 2048	;
 
 		float * pixel_array = new float[(samples + 2) * 4];
 
@@ -139,13 +143,21 @@ namespace INMOST
 			pixel_array[(q)* 4 + 3] = c.a();
 		}
 
-		pixel_array[0] = 0;
+		pixel_array[0] = 0.4;
 		pixel_array[1] = 1;
-		pixel_array[2] = 0;
+		pixel_array[2] = 0.4;
 		pixel_array[3] = 1;
+		pixel_array[4] = 0.4;
+		pixel_array[5] = 1;
+		pixel_array[6] = 0.4;
+		pixel_array[7] = 1;
 
+		pixel_array[(samples + 0) * 4 + 0] = 0;
+		pixel_array[(samples + 0) * 4 + 1] = 0.6;
+		pixel_array[(samples + 0) * 4 + 2] = 0;
+		pixel_array[(samples + 0) * 4 + 3] = 1;
 		pixel_array[(samples + 1) * 4 + 0] = 0;
-		pixel_array[(samples + 1) * 4 + 1] = 1;
+		pixel_array[(samples + 1) * 4 + 1] = 0.6;
 		pixel_array[(samples + 1) * 4 + 2] = 0;
 		pixel_array[(samples + 1) * 4 + 3] = 1;
 
@@ -204,10 +216,12 @@ namespace INMOST
 
 	double color_bar::pick_texture(double value) const
 	{
-		double eps = 1.0 / static_cast<double>(samples);
-		return (value - min) / (max - min)*(1 - 2 * eps) + eps;
+		//const double eps = 1.0 / static_cast<double>(samples);
+		const double eps = 2.0e-3;
+		return (value - min) / (max - min) *(1 - 2 * eps) + eps;
 		//return std::max(std::min((value-min)/(max-min),0.99),0.01);
 	}
+
 
 	void color_bar::Draw()
 	{

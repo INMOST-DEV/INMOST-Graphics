@@ -228,6 +228,124 @@ public:
 std::vector<segment> segments;
 
 
+//extract iso-surface with zero phi
+int MarchingTetra(const double x[4][3], const double phi[4], double xout[4][3], double iso)
+{
+	const int edges[6][2] = { {0,1},{1,2},{0,2},{2,3},{0,3},{3,1} };
+	bool node[4] = { false,false,false,false };
+	int nout = 0;
+	for (int k = 0; k < 6; ++k)
+	{
+		if ((phi[edges[k][0]] - iso) * (phi[edges[k][1]] - iso) < 0.0)
+		{
+			xout[nout][0] = (x[edges[k][0]][0] * (phi[edges[k][1]] - iso) - x[edges[k][1]][0] * (phi[edges[k][0]] - iso)) / (phi[edges[k][1]] - phi[edges[k][0]]);
+			xout[nout][1] = (x[edges[k][0]][1] * (phi[edges[k][1]] - iso) - x[edges[k][1]][1] * (phi[edges[k][0]] - iso)) / (phi[edges[k][1]] - phi[edges[k][0]]);
+			xout[nout][2] = (x[edges[k][0]][2] * (phi[edges[k][1]] - iso) - x[edges[k][1]][2] * (phi[edges[k][0]] - iso)) / (phi[edges[k][1]] - phi[edges[k][0]]);
+			nout++;
+		}
+		else
+		{
+			for (int q = 0; q < 2; ++q) if (phi[edges[k][q]] == iso && !node[edges[k][q]])
+			{
+				xout[nout][0] = x[edges[k][q]][0];
+				xout[nout][1] = x[edges[k][q]][1];
+				xout[nout][2] = x[edges[k][q]][2];
+				node[edges[k][q]] = true;
+				nout++;
+			}
+		}
+	}
+	return nout > 2 ? nout : 0;
+}
+
+int CellType(Cell c, TagReal tag_phi, double iso)
+{
+	ElementArray<Node> nodes = c.getNodes();
+	double phi_min = 1.0e+20, phi_max = -1.0e+20;
+	for (ElementArray<Node>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+	{
+		double phi = tag_phi[*it] - iso;
+		phi_min = std::min(phi_min, phi);
+		phi_max = std::max(phi_max, phi);
+	}
+	int ret = -1;
+	if (phi_max * phi_min <= 0.0) //surface cell
+		ret = 0;
+	else if (phi_max > 0) //full air cell
+		ret = 1;
+	return ret;
+}
+
+
+std::vector<double> surfc; //array of coordinates of polygons of isosurface
+std::vector<int> surfn; //number of nodes in polygon of isosurface
+
+void ComputeIsosurface(Mesh* mesh, TagReal tag_phi, double iso)
+{
+	surfc.clear();
+	surfn.clear();
+	for (int i = 0; i < mesh->CellLastLocalID(); i++) if( mesh->isValidCell(i))
+	{
+		Cell it = mesh->CellByLocalID(i);
+		if (CellType(it->self(), tag_phi,iso) == 0)
+		{
+			double xtet[4][3], phi[4], xsurf[4][3];
+			if (it->GetGeometricType() == Element::Tet)
+			{
+				ElementArray<Node> nodes = it->getNodes();
+				nodes[0].Centroid(xtet[0]);
+				nodes[1].Centroid(xtet[1]);
+				nodes[2].Centroid(xtet[2]);
+				nodes[3].Centroid(xtet[3]);
+				phi[0] = tag_phi[nodes[0]];
+				phi[1] = tag_phi[nodes[1]];
+				phi[2] = tag_phi[nodes[2]];
+				phi[3] = tag_phi[nodes[3]];
+				int np = MarchingTetra(xtet, phi, xsurf, iso);
+				if (np)
+				{
+					surfn.push_back(np);
+					for (int q = 0; q < np; ++q)
+						surfc.insert(surfc.end(), xsurf[q], xsurf[q] + 3);
+				}
+			}
+			else
+			{
+				it->Centroid(xtet[0]);
+				phi[0] = 0;
+				ElementArray<Node> nodes = it->getNodes();
+				for (ElementArray<Node>::iterator jt = nodes.begin(); jt != nodes.end(); ++jt)
+					phi[0] += tag_phi[*jt];
+				phi[0] /= (double)nodes.size();
+				ElementArray<Face> faces = it->getFaces();
+				for (ElementArray<Face>::iterator jt = faces.begin(); jt != faces.end(); ++jt)
+				{
+					ElementArray<Node> nodes = jt->getNodes();
+					nodes[0].Centroid(xtet[1]);
+					nodes[1].Centroid(xtet[2]);
+					phi[1] = tag_phi[nodes[0]];
+					phi[2] = tag_phi[nodes[1]];
+					for (int k = 1; k < nodes.size() - 1; ++k)
+					{
+						nodes[k + 1].Centroid(xtet[3]);
+						phi[3] = tag_phi[nodes[k + 1]];
+						int np = MarchingTetra(xtet, phi, xsurf, iso);
+						if (np)
+						{
+							surfn.push_back(np);
+							for (int q = 0; q < np; ++q)
+								surfc.insert(surfc.end(), xsurf[q], xsurf[q] + 3);
+						}
+						xtet[2][0] = xtet[3][0];
+						xtet[2][1] = xtet[3][1];
+						xtet[2][2] = xtet[3][2];
+						phi[2] = phi[3];
+					}
+				}
+			}
+		}
+	}
+}
 
 const int name_width = 32;
 const int type_width = 14;
@@ -1464,6 +1582,20 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 				glutPostRedisplay();
 				success = true;
 			}
+			else if (stype == "iso")
+			{
+				double iso = atof(inpstr + k + 1);
+				std::cout << "compute isosurface: " << iso << std::endl;
+				if (visualization_tag.isValid())
+				{
+					ComputeIsosurface(mesh, visualization_tag, iso);
+					correct_input = true;
+					glutPostRedisplay();
+					success = true;
+				}
+				else
+					std::cout << "Current visualization field not set" << std::endl;
+			}
 			else
 			{
 				if (stype == "node") visualization_type = NODE;
@@ -1654,45 +1786,36 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 								color_bar::SetVisualizationTag(visualization_tag,visualization_type,visualization_smooth);
 								for (Mesh::iteratorNode it = mesh->BeginNode(); it != mesh->EndNode(); ++it)
 								{
-									ElementArray<Element> elems = it->getAdjElements(visualization_type);
-									Storage::real_array coords = it->Coords();
-									Storage::real cnt[3], dist, wgt;
-									Storage::real val = 0.0, vol = 0.0, res;
-									for (ElementArray<Element>::iterator jt = elems.begin(); jt != elems.end(); ++jt) if (jt->HaveData(source_tag) && (jt->GetDataSize(source_tag) > comp || comp == ENUMUNDEF))
+									Storage::real res = 0.0;
+									if (visualization_type == NODE)
 									{
-										jt->Centroid(cnt);
-										if( mesh->GetDimensions() == 2 )
-											dist = (cnt[0] - coords[0])*(cnt[0] - coords[0]) + (cnt[1] - coords[1])*(cnt[1] - coords[1]);
-										else
-											dist = (cnt[0] - coords[0])*(cnt[0] - coords[0]) + (cnt[1] - coords[1])*(cnt[1] - coords[1]) + (cnt[2] - coords[2])*(cnt[2] - coords[2]);
-										wgt = 1.0 / (dist + 1.0e-8);
 										if (source_tag.GetDataType() == DATA_REAL)
 										{
-											Storage::real_array v = jt->RealArray(source_tag);
+											Storage::real_array v = it->RealArray(source_tag);
 											if (comp == ENUMUNDEF)
 											{
 												double l = 0;
 												for (unsigned q = 0; q < v.size(); ++q) l += v[q] * v[q];
 												l = sqrt(l);
-												val += wgt * l;
+												res = l;
 											}
-											else val += wgt * v[comp];
+											else res = v[comp];
 										}
 										else if (source_tag.GetDataType() == DATA_INTEGER)
 										{
-											Storage::integer_array v = jt->IntegerArray(source_tag);
+											Storage::integer_array v = it->IntegerArray(source_tag);
 											if (comp == ENUMUNDEF)
 											{
 												double l = 0;
 												for (unsigned q = 0; q < v.size(); ++q) l += v[q] * v[q];
 												l = sqrt(l);
-												val += wgt * l;
+												res = l;
 											}
-											else val += wgt * static_cast<double>(v[comp]);
+											else res = static_cast<double>(v[comp]);
 										}
 										else if (source_tag.GetDataType() == DATA_BULK)
 										{
-											Storage::bulk_array v = jt->BulkArray(source_tag);
+											Storage::bulk_array v = it->BulkArray(source_tag);
 											if (comp == ENUMUNDEF)
 											{
 												double l = 0;
@@ -1702,27 +1825,97 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 													l += g * g;
 												}
 												l = sqrt(l);
-												val += wgt * l;
+												res = l;
 											}
-											else val += wgt * static_cast<double>(v[comp]);
+											else res = static_cast<double>(v[comp]);
 										}
 #if defined(USE_AUTODIFF)
 										else if (source_tag.GetDataType() == DATA_VARIABLE)
 										{
-											Storage::var_array v = jt->VariableArray(source_tag);
+											Storage::var_array v = it->VariableArray(source_tag);
 											if (comp == ENUMUNDEF)
 											{
 												double l = 0;
 												for (unsigned q = 0; q < v.size(); ++q) l += v[q].GetValue() * v[q].GetValue();
 												l = sqrt(l);
-												val += wgt * l;
+												res = l;
 											}
-											else val += wgt * static_cast<double>(v[comp].GetValue());
+											else res = static_cast<double>(v[comp].GetValue());
 										}
 #endif
-										vol += wgt;
 									}
-									res = val / vol;
+									else
+									{
+										ElementArray<Element> elems = it->getAdjElements(visualization_type);
+										Storage::real_array coords = it->Coords();
+										Storage::real cnt[3], dist, wgt;
+										Storage::real val = 0.0, vol = 0.0;
+										for (ElementArray<Element>::iterator jt = elems.begin(); jt != elems.end(); ++jt) if (jt->HaveData(source_tag) && (jt->GetDataSize(source_tag) > comp || comp == ENUMUNDEF))
+										{
+											jt->Centroid(cnt);
+											if (mesh->GetDimensions() == 2)
+												dist = (cnt[0] - coords[0]) * (cnt[0] - coords[0]) + (cnt[1] - coords[1]) * (cnt[1] - coords[1]);
+											else
+												dist = (cnt[0] - coords[0]) * (cnt[0] - coords[0]) + (cnt[1] - coords[1]) * (cnt[1] - coords[1]) + (cnt[2] - coords[2]) * (cnt[2] - coords[2]);
+											wgt = 1.0 / (dist + 1.0e-8);
+											if (source_tag.GetDataType() == DATA_REAL)
+											{
+												Storage::real_array v = jt->RealArray(source_tag);
+												if (comp == ENUMUNDEF)
+												{
+													double l = 0;
+													for (unsigned q = 0; q < v.size(); ++q) l += v[q] * v[q];
+													l = sqrt(l);
+													val += wgt * l;
+												}
+												else val += wgt * v[comp];
+											}
+											else if (source_tag.GetDataType() == DATA_INTEGER)
+											{
+												Storage::integer_array v = jt->IntegerArray(source_tag);
+												if (comp == ENUMUNDEF)
+												{
+													double l = 0;
+													for (unsigned q = 0; q < v.size(); ++q) l += v[q] * v[q];
+													l = sqrt(l);
+													val += wgt * l;
+												}
+												else val += wgt * static_cast<double>(v[comp]);
+											}
+											else if (source_tag.GetDataType() == DATA_BULK)
+											{
+												Storage::bulk_array v = jt->BulkArray(source_tag);
+												if (comp == ENUMUNDEF)
+												{
+													double l = 0;
+													for (unsigned q = 0; q < v.size(); ++q)
+													{
+														double g = static_cast<double>(v[q]);
+														l += g * g;
+													}
+													l = sqrt(l);
+													val += wgt * l;
+												}
+												else val += wgt * static_cast<double>(v[comp]);
+											}
+#if defined(USE_AUTODIFF)
+											else if (source_tag.GetDataType() == DATA_VARIABLE)
+											{
+												Storage::var_array v = jt->VariableArray(source_tag);
+												if (comp == ENUMUNDEF)
+												{
+													double l = 0;
+													for (unsigned q = 0; q < v.size(); ++q) l += v[q].GetValue() * v[q].GetValue();
+													l = sqrt(l);
+													val += wgt * l;
+												}
+												else val += wgt * static_cast<double>(v[comp].GetValue());
+											}
+#endif
+											vol += wgt;
+										}
+										res = val / vol;
+									}
 									if (res < min) min = res;
 									if (res > max) max = res;
 									it->RealDF(visualization_tag) = res;
@@ -1949,6 +2142,79 @@ void draw_screen()
 	if (disp_e.isValid())
 		DrawElement(disp_e, color_t(1, 1, 0), color_t(1, 0, 0), color_t(0, 0, 1), true);
 
+
+	{
+		double middle[3] = { 0,0,0 };
+		size_t q = 0;
+		for (size_t k = 0; k < surfn.size(); ++k)
+		{
+			size_t s = surfn[k] * 3;
+			for (size_t l = q; l < q + s; l += 3)
+			{
+				middle[0] += surfc[l + 0];
+				middle[1] += surfc[l + 1];
+				middle[2] += surfc[l + 2];
+			}
+			q += s;
+		}
+		if (q)
+		{
+			middle[0] /= (double)q;
+			middle[1] /= (double)q;
+			middle[2] /= (double)q;
+		}
+		double dir[3] = { middle[0] - campos[0],middle[1] - campos[1],middle[2] - campos[2] };
+		double v = sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]);
+		if (v)
+		{
+			dir[0] /= v;
+			dir[1] /= v;
+			dir[2] /= v;
+		}
+		float ambientlight[] = { 0.0,0.0,1.0,1.0 };
+		float diffuselight[] = { 1.0,1.0,1.0,1.0 };
+		float specular[] = { 1.0,1.0,1.0,1.0 };
+		//float lightpos[] = { campos[0],campos[1],campos[2],1.0 };
+		float lightpos[] = { sright,stop,sfar,1.0 };
+		float specref[] = { 1.0,1.0,1.0,1.0 };
+		float spotdir[] = { -1,-1,-1 };
+
+		glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, ambientlight);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuselight);
+		glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+		//glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 10.0);
+		//glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 15.0);
+		//glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spotdir);
+		glEnable(GL_LIGHT0);
+		glEnable(GL_LIGHTING);
+		glColor3f(0.65, 0.65, 0.75);
+		q = 0;
+		for (size_t k = 0; k < surfn.size(); ++k)
+		{
+			size_t s = surfn[k] * 3;
+			glBegin(GL_TRIANGLE_FAN);
+			for (size_t l = q; l < q + s; l += 3)
+				glVertex3dv(&surfc[l]);
+			glEnd();
+			q += s;
+		}
+		glDisable(GL_LIGHTING);
+		glDisable(GL_LIGHT0);
+		
+		glColor3f(0, 0, 0);
+		q = 0;
+		for (size_t k = 0; k < surfn.size(); ++k)
+		{
+			size_t s = surfn[k] * 3;
+			glBegin(GL_LINE_LOOP);
+			for (size_t l = q; l < q + s; l += 3)
+				glVertex3dv(&surfc[l]);
+			glEnd();
+			q += s;
+		}
+		
+	}
 
 	//glTranslated((l+r)*0.5,(b+t)*0.5,(near+far)*0.5);
 	if( drawedges == 4 )
@@ -2199,7 +2465,6 @@ void draw_screen()
 		glVertex3dv(&dual_harmonic_points[k+6]);
 	}
 	glEnd();
-
 
 
 
