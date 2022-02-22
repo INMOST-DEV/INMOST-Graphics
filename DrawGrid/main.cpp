@@ -1554,7 +1554,7 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 				}
 				correct_input = true;
 				streamlines.clear();
-				glutPostRedisplay();
+				//glutPostRedisplay();
 				if( CommonVectors )
 				{
 					delete CommonVectors;
@@ -1579,7 +1579,8 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 				if( CommonVectors )
 					CommonVectors->SetScale(scale);
 				correct_input = true;
-				glutPostRedisplay();
+				//glutPostRedisplay();
+				inpstr[k] = ':';
 				success = true;
 			}
 			else if (stype == "iso")
@@ -1590,7 +1591,8 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 				{
 					ComputeIsosurface(mesh, visualization_tag, iso);
 					correct_input = true;
-					glutPostRedisplay();
+					//glutPostRedisplay();
+					inpstr[k] = ':';
 					success = true;
 				}
 				else
