@@ -28,6 +28,8 @@
 #include "picker.h"
 #include "clipper.h"
 
+
+
 inline static unsigned int flip(const unsigned int * fp)
 {
 	unsigned int mask = -((int)(*fp >> 31)) | 0x80000000;
@@ -45,6 +47,7 @@ Mesh * mesh;
 int interactive = 0;
 double zoom = 1;
 int width = 800, height = 800;
+int show_limits = 1;
 double sleft = 1e20, sright = -1e20, sbottom = 1e20, stop = -1e20, sfar = -1e20, snear = 1e20;
 double shift[3] = {0,0,0};
 double scale[3] = {1,1,1};
@@ -95,6 +98,7 @@ void write_state(std::string fname)
 	fout << drawcolorbar    << "   #draw color bar " << std::endl;
 	fout << pick_element    << "   #display element data under cursor" << std::endl;
 	fout << font_size       << "   #font size" << std::endl;
+	fout << show_limits     << "   #draw values outside of colorbar range in green" << std::endl;
 	fout << input_history.size() << "   #number of input commands " << std::endl;
 	for(size_t k = 0; k < input_history.size(); ++k)
 	{
@@ -135,6 +139,7 @@ void read_state(std::string fname)
 	fin >> drawcolorbar >> skip_endl;
 	fin >> pick_element >> skip_endl;
 	fin >> font_size >> skip_endl;
+	fin >> show_limits >> skip_endl;
 	fin >> history_size >> skip_endl;
 	for(int k = 0; k < history_size; ++k)
 	{
@@ -962,6 +967,7 @@ void keyboard(unsigned char key, int x, int y)
 	else if( key == 't' )
 	{
 		screenshot(1);
+		screenshot_png(1);
 		std::fstream fout("screenshot.svg",std::ios::out);
 		svg_draw(fout);
 		fout.close();
@@ -1511,6 +1517,16 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 				tiles = atoi(std::string(inpstr+l+1).c_str());
 			std::cout << "screenshot.tga with " << tiles << std::endl;
 			screenshot(tiles);
+			success = true;
+		}
+		else if (std::string(inpstr).substr(0, 14) == "screenshot_png")
+		{
+			int tiles = 2;
+			size_t l = std::string(inpstr).find(":");
+			if (l != std::string::npos)
+				tiles = atoi(std::string(inpstr + l + 1).c_str());
+			std::cout << "screenshot.png with " << tiles << std::endl;
+			screenshot_png(tiles);
 			success = true;
 		}
 	}
@@ -3038,7 +3054,7 @@ int main(int argc, char ** argv)
 	
 	glutReshapeFunc(reshape);
 	
-	color_bar::InitColorBarTexture();
+	color_bar::InitColorBarTexture(show_limits);
 	
 	if( !input_dely.empty() )
 	{

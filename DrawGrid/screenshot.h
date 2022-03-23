@@ -3,5 +3,6 @@
 
 
 void screenshot(int tiles);
+void screenshot_png(int tiles);
 
 #endif

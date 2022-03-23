@@ -121,7 +121,7 @@ namespace INMOST
 	}
 	
 	
-	void color_bar::InitTexture()
+	void color_bar::InitTexture(bool limits)
 	{
 		samples = 2048	;
 
@@ -143,23 +143,26 @@ namespace INMOST
 			pixel_array[(q)* 4 + 3] = c.a();
 		}
 
-		pixel_array[0] = 0.4;
-		pixel_array[1] = 1;
-		pixel_array[2] = 0.4;
-		pixel_array[3] = 1;
-		pixel_array[4] = 0.4;
-		pixel_array[5] = 1;
-		pixel_array[6] = 0.4;
-		pixel_array[7] = 1;
+		if (limits)
+		{
+			pixel_array[0] = 0.4;
+			pixel_array[1] = 1;
+			pixel_array[2] = 0.4;
+			pixel_array[3] = 1;
+			pixel_array[4] = 0.4;
+			pixel_array[5] = 1;
+			pixel_array[6] = 0.4;
+			pixel_array[7] = 1;
 
-		pixel_array[(samples + 0) * 4 + 0] = 0;
-		pixel_array[(samples + 0) * 4 + 1] = 0.6;
-		pixel_array[(samples + 0) * 4 + 2] = 0;
-		pixel_array[(samples + 0) * 4 + 3] = 1;
-		pixel_array[(samples + 1) * 4 + 0] = 0;
-		pixel_array[(samples + 1) * 4 + 1] = 0.6;
-		pixel_array[(samples + 1) * 4 + 2] = 0;
-		pixel_array[(samples + 1) * 4 + 3] = 1;
+			pixel_array[(samples + 0) * 4 + 0] = 0;
+			pixel_array[(samples + 0) * 4 + 1] = 0.6;
+			pixel_array[(samples + 0) * 4 + 2] = 0;
+			pixel_array[(samples + 0) * 4 + 3] = 1;
+			pixel_array[(samples + 1) * 4 + 0] = 0;
+			pixel_array[(samples + 1) * 4 + 1] = 0.6;
+			pixel_array[(samples + 1) * 4 + 2] = 0;
+			pixel_array[(samples + 1) * 4 + 3] = 1;
+		}
 
 		glPrintError();
 
