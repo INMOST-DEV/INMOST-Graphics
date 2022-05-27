@@ -47,9 +47,10 @@ namespace INMOST
 	{
 		min = 0;
 		max = 1;
+		bar_limits = true;
 		comment = "";
 
-		/*
+		
 		ticks.push_back(0.f);
 		ticks.push_back(0.2f);
 		ticks.push_back(0.4f);
@@ -71,10 +72,10 @@ namespace INMOST
 		colors.push_back(color_t(0,1,0));
 		colors.push_back(color_t(1,1,0));
 		colors.push_back(color_t(1,0,0));
-		*/
+		
 
 		//inversed gnuplot color scheme
-
+		/*
 		ticks.push_back(0.f);
 		ticks.push_back(0.05f);
 		ticks.push_back(0.25f);
@@ -91,20 +92,27 @@ namespace INMOST
 		colors.push_back(color_t(0.45, 0, 0.55));
 		//colors.push_back(color_t(0, 0, 0));
 		colors.push_back(color_t(0.25, 0.25, 0.25));
-
+		*/
 		
 		//colors.push_back(color_t(1,0,0));
 	}
 
+	const color_t min_limit(0.5, 0, 0.8), max_limit(0.6,0,0);
+
 
 	color_t color_bar::pick_color(float value) const
 	{
-		if (value < min)
-			return color_t(0.4, 1.0, 0.4);
-			//return color_t(1, 1, 1);
-		if (value > max)
-			return color_t(0, 0.6, 0);
-			//return color_t(0, 0, 0);
+		if (bar_limits)
+		{
+			if (value < min)
+				return min_limit;
+				//return color_t(0.4, 1.0, 0.4); //green
+				//return color_t(1, 1, 1);
+			if (value > max)
+				return max_limit;
+				//return color_t(0, 0.6, 0); //green
+				//return color_t(0, 0, 0);
+		}
 		float t = (value - min) / (max - min);
 		std::vector<float>::const_iterator it = std::lower_bound(ticks.begin(), ticks.end(), t);
 		size_t pos = it - ticks.begin();
@@ -124,7 +132,7 @@ namespace INMOST
 	void color_bar::InitTexture(bool limits)
 	{
 		samples = 2048	;
-
+		bar_limits = limits;
 		float * pixel_array = new float[(samples + 2) * 4];
 
 
@@ -145,6 +153,7 @@ namespace INMOST
 
 		if (limits)
 		{
+			/*
 			pixel_array[0] = 0.4;
 			pixel_array[1] = 1;
 			pixel_array[2] = 0.4;
@@ -161,6 +170,24 @@ namespace INMOST
 			pixel_array[(samples + 1) * 4 + 0] = 0;
 			pixel_array[(samples + 1) * 4 + 1] = 0.6;
 			pixel_array[(samples + 1) * 4 + 2] = 0;
+			pixel_array[(samples + 1) * 4 + 3] = 1;
+			*/
+			pixel_array[0] = min_limit.r();
+			pixel_array[1] = min_limit.g();
+			pixel_array[2] = min_limit.b();
+			pixel_array[3] = 1;
+			pixel_array[4] = min_limit.r();
+			pixel_array[5] = min_limit.g();
+			pixel_array[6] = min_limit.b();
+			pixel_array[7] = 1;
+
+			pixel_array[(samples + 0) * 4 + 0] = max_limit.r();
+			pixel_array[(samples + 0) * 4 + 1] = max_limit.g();
+			pixel_array[(samples + 0) * 4 + 2] = max_limit.b();
+			pixel_array[(samples + 0) * 4 + 3] = 1;
+			pixel_array[(samples + 1) * 4 + 0] = max_limit.r();
+			pixel_array[(samples + 1) * 4 + 1] = max_limit.g();
+			pixel_array[(samples + 1) * 4 + 2] = max_limit.b();
 			pixel_array[(samples + 1) * 4 + 3] = 1;
 		}
 

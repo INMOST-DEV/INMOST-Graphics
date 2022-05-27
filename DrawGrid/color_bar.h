@@ -14,6 +14,7 @@ namespace INMOST
 		static ElementType vtype;
 		static bool smooth;
 		float min, max;
+		bool bar_limits;
 		std::vector<float> ticks; //ticks from 0 to 1 for each color
 		std::vector<color_t> colors; //4 floats for each tick
 		std::string comment;
