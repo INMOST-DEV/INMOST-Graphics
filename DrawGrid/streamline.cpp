@@ -283,12 +283,21 @@ namespace INMOST
 			if (!c.isValid()) break;
 			//if( !c.getAsCell().Inside(next.data()) ) break;
 			//check we are inside mesh
-			/*
 			ElementArray<Cell> cells = c->BridgeAdjacencies2Cell(NODE);
+			cells.push_back(c);
 			bool inside = false;
 			for (ElementArray<Cell>::iterator it = cells.begin(); it != cells.end() && !inside; ++it)
 				if( it->Inside(next.data()) ) inside = true;
 			if( !inside ) break;
+			/*
+			{
+				double xyz[3], area = 0, vol = c.getAsCell().Volume(), dist;
+				c.Centroid(xyz);
+				dist = sqrt(pow(next[0] - xyz[0], 2) + pow(next[1] - xyz[1], 2) + pow(next[2] - xyz[2], 2));
+				ElementArray<Face> faces = c.getFaces();
+				for (ElementArray<Face>::iterator jt = faces.begin(); jt != faces.end(); ++jt) area += jt->Area();
+				if (dist > 6 * vol / area) break;
+			}
 			*/
 			c.SetMarker(visited);
 			GetVelocity(c, velocity_tag, velocity_defined, next, vel);
@@ -345,7 +354,7 @@ namespace INMOST
 		else for (unsigned int i = 0; i < points.size() - 1; i++)
 		{
 			glColor3f(velarr[i + 1] * 0.65, 0.65*(velarr[i + 1] < 0.5 ? velarr[i] : 1.0 - velarr[i]), 0.65*(1 - velarr[i + 1]));
-			drawcylinder(points[i], points[i + 1], 0.2*abs(points[i + 1] - points[i]));
+			drawcylinder(points[i], points[i + 1], 0.4*abs(points[i + 1] - points[i]));
 		}
 	}
 

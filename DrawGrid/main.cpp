@@ -2366,7 +2366,8 @@ void draw_screen()
 
 
 		for(size_t k = 0; k < streamlines.size(); ++k)
-			streamlines[k].Draw(true);//interactive);
+			//streamlines[k].Draw(true);//interactive);
+			streamlines[k].Draw(interactive);
 
 		
 		glBegin(GL_LINES);
