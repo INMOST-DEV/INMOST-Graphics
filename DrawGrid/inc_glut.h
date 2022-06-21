@@ -3,6 +3,9 @@
 
 #define MAC_WORKAROUND
 
+#if defined(USE_FREEGLUT)
+#include <GL/freeglut.h>
+#else //USE_FREEGLUT
 #if defined (__APPLE__) || defined(MACOSX)
 #include <GLUT/glut.h>
 #endif
@@ -21,6 +24,7 @@
 #if defined(__linux__)
 #include <GL/glut.h>
 #endif
+#endif //USE_FREEGLUT
 
 void printtext(const char * fmt, ...); //in printtext.cpp
 #include "inmost_common.h"
