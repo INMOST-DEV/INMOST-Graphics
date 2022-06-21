@@ -41,21 +41,6 @@ if(NOT USE_FREEGLUT)
 endif(NOT USE_FREEGLUT)
 
 
-#if(WIN32)
-#    # Prefix all shared libraries with 'lib'.
-#    set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
-#    # Prefix all static libraries with 'lib'.
-#    set(CMAKE_STATIC_LIBRARY_PREFIX "lib")
-#endif()
-if(MSVC)
-	set(LIBPNG_APPEND "lib") # for libpng16
-	set(LIBPNG_STATIC_NAME "_static")
-	set(ZLIB_STATIC_NAME "static")
-else(MSVC)
-	set(LIBPNG_APPEND "")
-	set(LIBPNG_STATIC_NAME "")
-	set(ZLIB_STATIC_NAME "")
-endif(MSVC)
 
 
 if(OPENGL_FOUND)

@@ -30,6 +30,8 @@ if(USE_FREEGLUT)
 	message("location: ${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freeglut_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
 	set_target_properties(freeglut_static PROPERTIES IMPORTED_LOCATION
 		${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freeglut_static${CMAKE_STATIC_LIBRARY_SUFFIX})
+	set_target_properties(freeglut_static PROPERTIES IMPORTED_LOCATION
+		${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freeglut_staticd${CMAKE_STATIC_LIBRARY_SUFFIX})
 	add_dependencies(freeglut_static FREEGLUT)
 	set(FREEGLUT_LIBRARIES freeglut_static) 
 	set(FREEGLUT_DIR ${install_dir})
@@ -47,6 +49,21 @@ endif(USE_FREEGLUT)
 
 
 if(USE_PNG)
+	#if(WIN32)
+	#    # Prefix all shared libraries with 'lib'.
+	#    set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
+	#    # Prefix all static libraries with 'lib'.
+	#    set(CMAKE_STATIC_LIBRARY_PREFIX "lib")
+	#endif()
+	if(MSVC)
+		set(LIBPNG_APPEND "lib") # for libpng16
+		set(LIBPNG_STATIC_NAME "_static")
+		set(ZLIB_STATIC_NAME "static")
+	else(MSVC)
+		set(LIBPNG_APPEND "")
+		set(LIBPNG_STATIC_NAME "")
+		set(ZLIB_STATIC_NAME "")
+	endif(MSVC)
 	set(LIB_DOWNLOAD_PATH "${CMAKE_BINARY_DIR}/Libraries/download")
 	include(ExternalProject)
 	ExternalProject_Add(ZLIB
@@ -65,6 +82,9 @@ if(USE_PNG)
 	message("location: ${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zlib${ZLIB_STATIC_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 	set_target_properties(zlib PROPERTIES IMPORTED_LOCATION
 		${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zlib${ZLIB_STATIC_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}
+	)
+	set_target_properties(zlib PROPERTIES IMPORTED_LOCATION_DEBUG
+		${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zlib${ZLIB_STATIC_NAME}d${CMAKE_STATIC_LIBRARY_SUFFIX}
 	)
 	add_dependencies(zlib ZLIB)
 	set(ZLIB_LIBRARIES zlib) 
@@ -90,6 +110,9 @@ if(USE_PNG)
 	message("location: ${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${LIBPNG_APPEND}png16${LIBPNG_STATIC_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 	set_target_properties(png PROPERTIES IMPORTED_LOCATION
 		${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${LIBPNG_APPEND}png16${LIBPNG_STATIC_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}
+	)
+	set_target_properties(png PROPERTIES IMPORTED_LOCATION_DEBUG
+		${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${LIBPNG_APPEND}png16${LIBPNG_STATIC_NAME}d${CMAKE_STATIC_LIBRARY_SUFFIX}
 	)
 	add_dependencies(png PNG)
 	set(PNG_LIBRARIES png ${ZLIB_LIBRARIES}) 
