@@ -30,7 +30,7 @@ if(USE_FREEGLUT)
 	message("location: ${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freeglut_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
 	set_target_properties(freeglut_static PROPERTIES IMPORTED_LOCATION
 		${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freeglut_static${CMAKE_STATIC_LIBRARY_SUFFIX})
-	set_target_properties(freeglut_static PROPERTIES IMPORTED_LOCATION
+	set_target_properties(freeglut_static PROPERTIES IMPORTED_LOCATION_DEBUG
 		${install_dir}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freeglut_staticd${CMAKE_STATIC_LIBRARY_SUFFIX})
 	add_dependencies(freeglut_static FREEGLUT)
 	set(FREEGLUT_LIBRARIES freeglut_static) 

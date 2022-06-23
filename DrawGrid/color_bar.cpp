@@ -131,7 +131,10 @@ namespace INMOST
 	
 	void color_bar::InitTexture(bool limits)
 	{
-		samples = 2048	;
+		int max_size;
+		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
+		//std::cout << "max texture size: " << max_size << " allowed " << pow(2, floor(log(max_size - 2) / log(2.0))) << std::endl;
+		samples = std::min<int>(2048, pow(2, floor(log(max_size - 2) / log(2.0))));
 		bar_limits = limits;
 		float * pixel_array = new float[(samples + 2) * 4];
 
@@ -204,7 +207,7 @@ namespace INMOST
 		glPrintError();
 		//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-		glTexImage1D(GL_TEXTURE_1D, 0, 4, samples + 2, 1, GL_RGBA, GL_FLOAT, pixel_array);
+		glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, samples + 2, 1, GL_RGBA, GL_FLOAT, pixel_array);
 		glPrintError();
 
 		std::cout << "Created texture " << texture << std::endl;
