@@ -132,15 +132,16 @@ namespace INMOST
 	void color_bar::InitTexture(bool limits)
 	{
 		int max_size;
+		bool border = false;
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
-		//std::cout << "max texture size: " << max_size << " allowed " << pow(2, floor(log(max_size - 2) / log(2.0))) << std::endl;
+		std::cout << "max texture size: " << max_size << " allowed " << pow(2, floor(log(max_size - 2) / log(2.0))) << std::endl;
 		samples = std::min<int>(2048, pow(2, floor(log(max_size - 2) / log(2.0))));
 		bar_limits = limits;
-		float * pixel_array = new float[(samples + 2) * 4];
+		float * pixel_array = new float[samples * 4 + (border ? 8 : 0)];
 
 
 
-		for (int q = 0; q < samples + 2; ++q)
+		for (int q = 0; q < samples + (border ? 2 : 0); ++q)
 		{
 			float t = 1.0f*q / static_cast<float>(samples + 1);
 			color_t c = pick_color(t*(max-min)+min);
@@ -184,14 +185,14 @@ namespace INMOST
 			pixel_array[6] = min_limit.b();
 			pixel_array[7] = 1;
 
-			pixel_array[(samples + 0) * 4 + 0] = max_limit.r();
-			pixel_array[(samples + 0) * 4 + 1] = max_limit.g();
-			pixel_array[(samples + 0) * 4 + 2] = max_limit.b();
-			pixel_array[(samples + 0) * 4 + 3] = 1;
-			pixel_array[(samples + 1) * 4 + 0] = max_limit.r();
-			pixel_array[(samples + 1) * 4 + 1] = max_limit.g();
-			pixel_array[(samples + 1) * 4 + 2] = max_limit.b();
-			pixel_array[(samples + 1) * 4 + 3] = 1;
+			pixel_array[(samples + (border ? 0 : -2)) * 4 + 0] = max_limit.r();
+			pixel_array[(samples + (border ? 0 : -2)) * 4 + 1] = max_limit.g();
+			pixel_array[(samples + (border ? 0 : -2)) * 4 + 2] = max_limit.b();
+			pixel_array[(samples + (border ? 0 : -2)) * 4 + 3] = 1;
+			pixel_array[(samples + (border ? 1 : -1)) * 4 + 0] = max_limit.r();
+			pixel_array[(samples + (border ? 1 : -1)) * 4 + 1] = max_limit.g();
+			pixel_array[(samples + (border ? 1 : -1)) * 4 + 2] = max_limit.b();
+			pixel_array[(samples + (border ? 1 : -1)) * 4 + 3] = 1;
 		}
 
 		glPrintError();
@@ -207,7 +208,7 @@ namespace INMOST
 		glPrintError();
 		//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-		glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, samples + 2, 1, GL_RGBA, GL_FLOAT, pixel_array);
+		glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, samples + (border ? 2 : 0), border ? 1 : 0, GL_RGBA, GL_FLOAT, pixel_array);
 		glPrintError();
 
 		std::cout << "Created texture " << texture << std::endl;
