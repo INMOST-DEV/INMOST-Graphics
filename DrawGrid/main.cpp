@@ -2275,7 +2275,7 @@ void draw_screen()
 				bclipper->clip_plane(p,n);
 				bclipper->gen_clip(clip_boundary,p,n,elevation);
 				clipboxupdate = false;
-				for(int k = 0; k < (int)orphans.size(); ++k)
+				if( draw_orphan ) for(int k = 0; k < (int)orphans.size(); ++k)
 				{
 					if( orphans[k]->GetElementType() == FACE )
 						clip_boundary.push_back(DrawFace(orphans[k]->getAsFace()));
@@ -2759,6 +2759,8 @@ int main(int argc, char ** argv)
 		if( argc > 3 )	mesh->SetFileOption("VTK_GRID_DIMS",argv[3]);
 		mesh->Load(argv[1]);
 	} 
+
+	//Tag ftag = mesh->GetTag("CellEntityIds");
 	/*
 	catch(...)
 	{
