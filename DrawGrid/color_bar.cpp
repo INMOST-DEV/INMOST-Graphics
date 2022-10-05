@@ -50,7 +50,7 @@ namespace INMOST
 		bar_limits = true;
 		comment = "";
 
-		
+#if 0
 		ticks.push_back(0.f);
 		ticks.push_back(0.2f);
 		ticks.push_back(0.4f);
@@ -66,16 +66,17 @@ namespace INMOST
 		//colors.push_back(color_t(0,0,1));
 		//colors.push_back(color_t(1,0,1));
 
+
 		colors.push_back(color_t(1,0,1));
 		colors.push_back(color_t(0,0,1));
 		colors.push_back(color_t(0,1,1));
 		colors.push_back(color_t(0,1,0));
 		colors.push_back(color_t(1,1,0));
 		colors.push_back(color_t(1,0,0));
-		
+#else	
 
 		//inversed gnuplot color scheme
-		/*
+		
 		ticks.push_back(0.f);
 		ticks.push_back(0.05f);
 		ticks.push_back(0.25f);
@@ -92,7 +93,7 @@ namespace INMOST
 		colors.push_back(color_t(0.45, 0, 0.55));
 		//colors.push_back(color_t(0, 0, 0));
 		colors.push_back(color_t(0.25, 0.25, 0.25));
-		*/
+#endif	
 		
 		//colors.push_back(color_t(1,0,0));
 	}

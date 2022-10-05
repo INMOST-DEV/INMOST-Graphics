@@ -2017,7 +2017,14 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 								GetColorBar()->set_min(min);
 								GetColorBar()->set_max(max);
 								std::stringstream comment;
-								comment << name << "[" << comp << "] on " << typen << ", [" << min << ":" << max << "]";
+								comment << name;
+								if (source_tag.GetSize() > 1)
+								{
+									if (comp == ENUMUNDEF)
+										comment << "[abs]";
+									else comment << "[" << comp << "]";
+								}
+								comment << " on " << typen << ", [" << min << ":" << max << "]";
 								GetColorBar()->set_comment(comment.str());
 								clipupdate = true;
 								/*
