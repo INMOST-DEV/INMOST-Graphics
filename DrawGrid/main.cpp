@@ -145,10 +145,10 @@ void read_state(std::string fname)
 	{
 		fin >> inptype >> skip_endl;
 		fin >> inpstr;
-		if( inptype == 4 )
-			input_dely.push_back(std::make_pair(inptype,std::string(inpstr)));
-		else
-			ProcessCommonInput(inpstr,inptype);
+		//if( inptype == 4 )
+		input_dely.push_back(std::make_pair(inptype,std::string(inpstr)));
+		//else
+		//	ProcessCommonInput(inpstr,inptype);
 	}
 	fin.close();
 }
@@ -967,7 +967,7 @@ void keyboard(unsigned char key, int x, int y)
 	else if( key == 't' )
 	{
 		screenshot(1);
-		screenshot_png(1);
+		screenshot_png(1,"screenshot.png");
 		std::fstream fout("screenshot.svg",std::ios::out);
 		svg_draw(fout);
 		fout.close();
@@ -1521,12 +1521,16 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 		}
 		else if (std::string(inpstr).substr(0, 14) == "screenshot_png")
 		{
-			int tiles = 2;
+			std::string fname = "screenshot.png";
+			int tiles = 1;
 			size_t l = std::string(inpstr).find(":");
+			size_t m = std::string(inpstr).find(":",l+1);
 			if (l != std::string::npos)
 				tiles = atoi(std::string(inpstr + l + 1).c_str());
+			if (m != std::string::npos)
+				fname = std::string(inpstr + m + 1);
 			std::cout << "screenshot.png with " << tiles << std::endl;
-			screenshot_png(tiles);
+			screenshot_png(tiles,fname);
 			success = true;
 		}
 	}

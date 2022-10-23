@@ -3,6 +3,6 @@
 
 
 void screenshot(int tiles);
-void screenshot_png(int tiles);
+void screenshot_png(int tiles, std::string fname);
 
 #endif
