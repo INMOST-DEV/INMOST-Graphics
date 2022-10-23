@@ -19,15 +19,21 @@ void screenshot(int tiles)
 	//glGetIntegerv(GL_VIEWPORT,WH);
 	//printf("W %d H %d\n",WH[0],WH[1]);
 
-
+	glPrintError();
 	for (int i = 0; i < tiles; ++i)
 	{
 		for (int j = 0; j < tiles; ++j)
 		{
 			glViewport(-oldwidth*i, -oldheight*j, width, height);
+			glPrintError();
 			draw_screen();
+			glPrintError();
 			glReadBuffer(GL_BACK);
-			glReadPixels(0, 0, oldwidth, oldheight, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempbuffer);
+			glPrintError();
+			glPixelStorei(GL_PACK_ALIGNMENT, 1);
+			//glReadPixels(0, 0, oldwidth, oldheight, GL_BGR_EXT, GL_UNSIGNED_BYTE, tempbuffer);
+			glReadPixels(0, 0, oldwidth, oldheight, GL_RGB, GL_UNSIGNED_BYTE, tempbuffer);
+			glPrintError();
 
 			int koff = oldwidth*(i);
 			int loff = oldheight*(j);
@@ -68,7 +74,7 @@ void screenshot(int tiles)
 #include <png.h>
 #endif
 
-void screenshot_png(int tiles)
+void screenshot_png(int tiles, std::string fname)
 {
 	int height = glutGet(GLUT_WINDOW_HEIGHT);
 	int width = glutGet(GLUT_WINDOW_WIDTH);
@@ -83,18 +89,23 @@ void screenshot_png(int tiles)
 	//glGetIntegerv(GL_VIEWPORT,WH);
 	//printf("W %d H %d\n",WH[0],WH[1]);
 
-
+	glPrintError();
 	for (int i = 0; i < tiles; ++i)
 	{
 		for (int j = 0; j < tiles; ++j)
 		{
 			glViewport(-oldwidth * i, -oldheight * j, width, height);
+			glPrintError();
 			draw_screen();
+			glPrintError();
 			glReadBuffer(GL_BACK);
+			glPixelStorei(GL_PACK_ALIGNMENT,1);
+			glPrintError();
 			glReadPixels(0, 0, oldwidth, oldheight, GL_RGB, GL_UNSIGNED_BYTE, tempbuffer);
-
+			glPrintError();
 			int koff = oldwidth * (i);
 			int loff = oldheight * (j);
+			
 
 			for (int l = 0; l < oldheight; ++l)
 				for (int k = 0; k < oldwidth; ++k)
@@ -114,7 +125,7 @@ void screenshot_png(int tiles)
 			{
 				if (!setjmp(png_jmpbuf(png_ptr)))
 				{
-					FILE* fp = fopen("screenshot.png", "wb");
+					FILE* fp = fopen(fname.c_str(), "wb");
 					if (fp)
 					{
 						png_init_io(png_ptr, fp);
