@@ -1095,8 +1095,12 @@ void DrawElement(Element e, color_t face, color_t edge, color_t node, bool print
 		for(ElementArray<Node>::iterator it = nodes.begin(); it != nodes.end(); ++it)
 			glVertexNdv(it->Coords().data(),it->GetMeshLink()->GetDimensions());
 		glEnd();
+
+		
+	
+
 		glColor3f(0, 0, 0);
-		//glDisable(GL_DEPTH_TEST);
+		glDisable(GL_DEPTH_TEST);
 		if (print_adj)
 		{
 			for (ElementArray<Edge>::iterator it = edges.begin(); it != edges.end(); ++it)
@@ -1108,7 +1112,33 @@ void DrawElement(Element e, color_t face, color_t edge, color_t node, bool print
 				printtext("%d", it->LocalID());
 			}
 		}
-		//glEnable(GL_DEPTH_TEST);
+
+		{
+			double xb[3] = { 0,0,0 }, xc[3] = { 0,0,0 };
+			e->Barycenter(xb);
+			e->Centroid(xc);
+
+			glColor3f(0, 0, 1);
+			glBegin(GL_LINES);
+			glVertex3dv(xb);
+			glVertex3dv(xc);
+			glEnd();
+
+			glPointSize(3.0);
+
+			glBegin(GL_POINTS);
+
+			glColor3f(1, 0, 0);
+			glVertex3dv(xb);
+
+			glColor3f(0, 1, 0);
+			glVertex3dv(xc);
+			glEnd();
+
+			glPointSize(1.0);
+		}
+
+		glEnable(GL_DEPTH_TEST);
 	}
 	else if( e.GetElementType() == CELL )
 	{
@@ -1137,6 +1167,7 @@ void DrawElement(Element e, color_t face, color_t edge, color_t node, bool print
 			glVertexNdv(it->Coords().data(),it->GetMeshLink()->GetDimensions());
 		glEnd();
 
+		glDisable(GL_DEPTH_TEST);
 		if (print_adj)
 		{
 			for (ElementArray<Face>::iterator it = dfaces.begin(); it != dfaces.end(); ++it)
@@ -1148,6 +1179,33 @@ void DrawElement(Element e, color_t face, color_t edge, color_t node, bool print
 				printtext("%d", it->LocalID());
 			}
 		}
+
+		{
+			double xb[3] = { 0,0,0 }, xc[3] = { 0,0,0 };
+			e->Barycenter(xb);
+			e->Centroid(xc);
+
+			glColor3f(0, 0, 1);
+			glBegin(GL_LINES);
+			glVertex3dv(xb);
+			glVertex3dv(xc);
+			glEnd();
+
+			glPointSize(3.0);
+
+			glBegin(GL_POINTS);
+
+			glColor3f(1, 0, 0);
+			glVertex3dv(xb);
+
+			glColor3f(0, 1, 0);
+			glVertex3dv(xc);
+			glEnd();
+
+			glPointSize(1.0);
+		}
+
+		glEnable(GL_DEPTH_TEST);
 	}
 	glPointSize(1);
 	if (e.GetElementType() == ESET)
@@ -2746,6 +2804,7 @@ int main(int argc, char ** argv)
 {
 	double tt;
 	table[CENTROID]    = CELL | FACE;
+	table[BARYCENTER] = CELL | FACE;
 	table[NORMAL]      = FACE;
 	table[ORIENTATION] = FACE;
 	table[MEASURE]     = CELL|FACE;
