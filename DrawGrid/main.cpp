@@ -2258,8 +2258,8 @@ void draw_screen()
 			dir[1] /= v;
 			dir[2] /= v;
 		}
-		float ambientlight[] = { 0.0,0.0,1.0,1.0 };
-		float diffuselight[] = { 1.0,1.0,1.0,1.0 };
+		float ambientlight[] = { 1.0,0.1,0.1,1.0 };
+		float diffuselight[] = { 1.0,0.5,0.5,1.0 };
 		float specular[] = { 1.0,1.0,1.0,1.0 };
 		//float lightpos[] = { campos[0],campos[1],campos[2],1.0 };
 		float lightpos[] = { sright,stop,sfar,1.0 };
@@ -2275,7 +2275,8 @@ void draw_screen()
 		//glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spotdir);
 		glEnable(GL_LIGHT0);
 		glEnable(GL_LIGHTING);
-		glColor3f(0.65, 0.65, 0.75);
+		//glColor3f(0.65, 0.65, 0.75);
+		glColor3f(0.75, 0.35, 0.35);
 		q = 0;
 		for (size_t k = 0; k < surfn.size(); ++k)
 		{
@@ -2289,7 +2290,7 @@ void draw_screen()
 		glDisable(GL_LIGHTING);
 		glDisable(GL_LIGHT0);
 		
-		glColor3f(0, 0, 0);
+		glColor3f(0.6, 0.4, 0.4);
 		q = 0;
 		for (size_t k = 0; k < surfn.size(); ++k)
 		{
