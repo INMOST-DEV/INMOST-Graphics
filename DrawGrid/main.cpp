@@ -325,15 +325,18 @@ void ComputeIsosurface(Mesh* mesh, TagReal tag_phi, double iso)
 				ElementArray<Face> faces = it->getFaces();
 				for (ElementArray<Face>::iterator jt = faces.begin(); jt != faces.end(); ++jt)
 				{
+					jt->Centroid(xtet[1]);
+					phi[1] = 0;
 					ElementArray<Node> nodes = jt->getNodes();
-					nodes[0].Centroid(xtet[1]);
-					nodes[1].Centroid(xtet[2]);
-					phi[1] = tag_phi[nodes[0]];
-					phi[2] = tag_phi[nodes[1]];
-					for (int k = 1; k < nodes.size() - 1; ++k)
+					for (ElementArray<Node>::iterator kt = nodes.begin(); kt != nodes.end(); ++kt)
+						phi[1] += tag_phi[*kt];
+					phi[1] /= (double)nodes.size();
+					nodes.back().Centroid(xtet[2]);
+					phi[2] = tag_phi[nodes.back()];
+					for (ElementArray<Node>::iterator kt = nodes.begin(); kt != nodes.end(); ++kt)
 					{
-						nodes[k + 1].Centroid(xtet[3]);
-						phi[3] = tag_phi[nodes[k + 1]];
+						kt->Centroid(xtet[3]);
+						phi[3] = tag_phi[*kt];
 						int np = MarchingTetra(xtet, phi, xsurf, iso);
 						if (np)
 						{
@@ -2289,7 +2292,7 @@ void draw_screen()
 		}
 		glDisable(GL_LIGHTING);
 		glDisable(GL_LIGHT0);
-		
+		/*
 		glColor3f(0.6, 0.4, 0.4);
 		q = 0;
 		for (size_t k = 0; k < surfn.size(); ++k)
@@ -2301,7 +2304,7 @@ void draw_screen()
 			glEnd();
 			q += s;
 		}
-		
+		*/
 	}
 
 	//glTranslated((l+r)*0.5,(b+t)*0.5,(near+far)*0.5);
@@ -2606,6 +2609,67 @@ void draw()
 	glutSwapBuffers();
 }
 
+class poly
+{
+	std::vector<double> coords;
+	double dist;
+	double shade;
+public:
+	poly(const std::vector<double> & coords, double cam[3]) :coords(coords)
+	{
+		double cnt[3], nrm[3], area;
+		memset(cnt, 0, sizeof(double) * 3);
+		memset(nrm, 0, sizeof(double) * 3);
+		for (size_t i = 0; i < coords.size(); i += 3)
+		{
+			cnt[0] += coords[i + 0];
+			cnt[1] += coords[i + 1];
+			cnt[2] += coords[i + 2];
+		}
+		for (int k = 0; k < 3; ++k)
+		{
+			cnt[k] *= 3;
+			cnt[k] /= (double)coords.size();
+		}
+		const double* x0 = cnt, *x1 = get_coords(ncoords()-1), * x2;
+		for (size_t i = 0; i < ncoords(); i++)
+		{
+			x2 = get_coords(i);
+			nrm[0] += (x1[1] - x0[1]) * (x2[2] - x0[2]) - (x1[2] - x0[2]) * (x2[1] - x0[1]);
+			nrm[1] += (x1[2] - x0[2]) * (x2[0] - x0[0]) - (x1[0] - x0[0]) * (x2[2] - x0[2]);
+			nrm[2] += (x1[0] - x0[0]) * (x2[1] - x0[1]) - (x1[1] - x0[1]) * (x2[0] - x0[0]);
+			x1 = x2;
+		}
+		area = sqrt(nrm[0] * nrm[0] + nrm[1] * nrm[1] + nrm[2] * nrm[2]);
+		if (area)
+		{
+			nrm[0] /= area;
+			nrm[1] /= area;
+			nrm[2] /= area;
+		}
+		for (int k = 0; k < 3; ++k)
+		{
+			cnt[k] -= cam[k];
+			dist += cnt[k] * cnt[k];
+		}
+		dist = sqrt(dist);
+		if (dist)
+		{
+			cnt[0] /= dist;
+			cnt[1] /= dist;
+			cnt[2] /= dist;
+			shade = fabs(nrm[0] * cnt[0] + nrm[1] * cnt[1] + nrm[2] * cnt[2]);
+		}
+		else shade = 1;
+	}
+	poly(const poly& b) : coords(b.coords), dist(b.dist) {}
+	poly& operator =(poly const& b) { coords = b.coords; dist = b.dist; return *this; }
+	bool operator <(const poly& b) { return dist < b.dist; }
+	const double* get_coords(int k) const { assert(k * 3 < coords.size()); return &coords[k * 3]; }
+	size_t ncoords() const { return coords.size() / 3; }
+	double get_dist() const { return dist; }
+	double get_shade() const { return shade; }
+};
 
 
 void svg_draw(std::ostream & file)
@@ -2668,7 +2732,40 @@ void svg_draw(std::ostream & file)
 	whereami(campos[0],campos[1],campos[2]);
 	//~ int picked = -1;
 
-	
+	{
+		std::vector<poly> sorted_poly;
+		size_t q = 0;
+		double max_dist = 0, min_dist = 1.0e+20;
+		for (size_t k = 0; k < surfn.size(); ++k)
+		{
+			size_t s = surfn[k] * 3;
+			sorted_poly.push_back(poly(std::vector<double>(surfc.begin() + q, surfc.begin() + q + s), campos));
+			max_dist = std::max(max_dist, sorted_poly.back().get_dist());
+			min_dist = std::min(max_dist, sorted_poly.back().get_dist());
+			q += s;
+		}
+		std::sort(sorted_poly.rbegin(), sorted_poly.rend());
+
+		int height = glutGet(GLUT_WINDOW_HEIGHT);
+		for (std::vector<poly>::iterator it = sorted_poly.begin(); it != sorted_poly.end(); ++it)
+		{
+			//double t = (1 - (it->get_dist() - min_dist) / (max_dist - min_dist))*0.6 + 0.4;
+			double t = it->get_shade()*0.6 + 0.4;
+			file << "<g fill=\"" << color_t(1.0*t, 0.4*t, 0.4*t).svg_rgb() << "\" fill-opacity=\"1.0\" stroke-opacity=\"1.0\">" << std::endl;
+			file << "<polygon points=\"";
+			for (size_t k = 0; k < it->ncoords(); ++k)
+			{
+				const double* vert = it->get_coords(k);
+				double pvx, pvy, pvz;
+				gluProject(vert[0], vert[1], vert[2], modelview, projection, viewport, &pvx, &pvy, &pvz); 
+				pvy = height - pvy;
+				file << pvx << "," << pvy << (k < it->ncoords() - 1 ? " " : "");
+			}
+			file << "\"/>" << std::endl;
+			file << "</g>" << std::endl;
+		}		
+	}
+
 	//glTranslated((l+r)*0.5,(b+t)*0.5,(near+far)*0.5);
 	if( drawedges == 4 )
 	{
@@ -2749,7 +2846,7 @@ void svg_draw(std::ostream & file)
 				}
 				else
 				{
-					file << "<g stroke=\"none\" fill=\"green\" fill-opacity=\"0.1\" stroke-opacity=\"0.3\">" << std::endl;
+					file << "<g stroke=\"none\" fill=\"green\" fill-opacity=\"0.05\" stroke-opacity=\"0.3\">" << std::endl;
 					all_boundary[j].svg_draw(file, ::drawedges && ::drawedges != 2, modelview, projection, viewport);
 					file << "</g>" << std::endl;
 					j++;
@@ -2774,7 +2871,7 @@ void svg_draw(std::ostream & file)
 	}
 
 	
-	if( isColorBarEnabled() )
+	if( isColorBarEnabled() && drawcolorbar)
 	{
 		glLoadIdentity();
 		set_matrix2d();

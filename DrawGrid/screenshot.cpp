@@ -6,10 +6,10 @@ extern void draw_screen(); //global openl drawing routine
 
 void screenshot(int tiles)
 {
-	int height = glutGet(GLUT_WINDOW_HEIGHT);
-	int width = glutGet(GLUT_WINDOW_WIDTH);
-	int oldwidth = width;
-	int oldheight = height;
+	size_t height = glutGet(GLUT_WINDOW_HEIGHT);
+	size_t width = glutGet(GLUT_WINDOW_WIDTH);
+	size_t oldwidth = width;
+	size_t oldheight = height;
 	width *= tiles;
 	height *= tiles;
 
@@ -35,13 +35,13 @@ void screenshot(int tiles)
 			glReadPixels(0, 0, oldwidth, oldheight, GL_RGB, GL_UNSIGNED_BYTE, tempbuffer);
 			glPrintError();
 
-			int koff = oldwidth*(i);
-			int loff = oldheight*(j);
+			size_t koff = oldwidth*(i);
+			size_t loff = oldheight*(j);
 
-			for (int l = 0; l < oldheight; ++l)
-			for (int k = 0; k < oldwidth; ++k)
+			for (size_t l = 0; l < oldheight; ++l)
+			for (size_t k = 0; k < oldwidth; ++k)
 			for (int m = 0; m < 3; ++m)
-				pixelbuffer[((koff + k) + (loff + l)*width) * 3 + m] = tempbuffer[(k + l*oldwidth) * 3 + m];
+				pixelbuffer[((koff + k) + (loff + l)*width) * 3 + m] = tempbuffer[(k + l*oldwidth) * 3 + (2-m)];
 
 			//filename[0] += i;
 			//filename[1] += j;
@@ -76,10 +76,10 @@ void screenshot(int tiles)
 
 void screenshot_png(int tiles, std::string fname)
 {
-	int height = glutGet(GLUT_WINDOW_HEIGHT);
-	int width = glutGet(GLUT_WINDOW_WIDTH);
-	int oldwidth = width;
-	int oldheight = height;
+	size_t height = glutGet(GLUT_WINDOW_HEIGHT);
+	size_t width = glutGet(GLUT_WINDOW_WIDTH);
+	size_t oldwidth = width;
+	size_t oldheight = height;
 	width *= tiles;
 	height *= tiles;
 	
@@ -103,12 +103,12 @@ void screenshot_png(int tiles, std::string fname)
 			glPrintError();
 			glReadPixels(0, 0, oldwidth, oldheight, GL_RGB, GL_UNSIGNED_BYTE, tempbuffer);
 			glPrintError();
-			int koff = oldwidth * (i);
-			int loff = oldheight * (j);
+			size_t koff = oldwidth * (i);
+			size_t loff = oldheight * (j);
 			
 
-			for (int l = 0; l < oldheight; ++l)
-				for (int k = 0; k < oldwidth; ++k)
+			for (size_t l = 0; l < oldheight; ++l)
+				for (size_t k = 0; k < oldwidth; ++k)
 					for (int m = 0; m < 3; ++m)
 						pixelbuffer[((koff + k) + (loff + l) * width) * 3 + m] = tempbuffer[(k + l * oldwidth) * 3 + m];
 		}

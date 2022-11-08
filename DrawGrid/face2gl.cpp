@@ -697,7 +697,7 @@ namespace INMOST
 
 	void draw_faces_interactive_nc(std::vector<face2gl> & set)
 	{
-		glColor4f(0, 1, 0, 0.1);
+		glColor4f(0, 1, 0, 0.05);
 
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonOffset(1.0, 1.0);
