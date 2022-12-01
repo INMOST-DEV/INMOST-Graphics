@@ -1563,9 +1563,13 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 			glutHideWindow();
 		else if( std::string(inpstr) == "exit" )
 			exit(0);
-		else if( std::string(inpstr) == "screenshot_svg" )
+		else if( std::string(inpstr).substr(0, 14) == "screenshot_svg" )
 		{
-			std::fstream fout("screenshot.svg",std::ios::out);
+			std::string fname = "screenshot.svg";
+			size_t l = std::string(inpstr).find(":");
+			if (l != std::string::npos)
+				fname = std::string(inpstr + l + 1);
+			std::fstream fout(fname.c_str(),std::ios::out);
 			svg_draw(fout);
 			fout.close();
 			success = true;
@@ -1590,7 +1594,7 @@ void ProcessCommonInput(char inpstr[8192], int inptype)
 				tiles = atoi(std::string(inpstr + l + 1).c_str());
 			if (m != std::string::npos)
 				fname = std::string(inpstr + m + 1);
-			std::cout << "screenshot.png with " << tiles << std::endl;
+			std::cout << fname << " with " << tiles << std::endl;
 			screenshot_png(tiles,fname);
 			success = true;
 		}
