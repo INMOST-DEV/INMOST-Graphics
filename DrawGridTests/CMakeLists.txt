@@ -3,6 +3,8 @@ set(SOURCE main.cpp
 		rotate.cpp
 		rotate.h
 		my_glut.h)
+
+cmake_policy(SET CMP0072 NEW) # Prefer GLVND to old GL when available
 find_package(OpenGL)
 if(NOT USE_FREEGLUT)
 	find_package(GLUT)

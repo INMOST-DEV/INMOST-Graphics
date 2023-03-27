@@ -35,6 +35,8 @@ set(SOURCE main.cpp
 		   clipper.cpp
 		   vector.h
 		   vector.cpp)
+
+cmake_policy(SET CMP0072 NEW) # Prefer GLVND to old GL when available
 find_package(OpenGL)
 if(NOT USE_FREEGLUT)
 	find_package(GLUT)

@@ -24,6 +24,7 @@ foreach(vtarget ${TARGETS})
 target_link_libraries(${vtarget} ${INMOST_LIBRARIES})
 #target_link_libraries(${vtarget} lapack blas) 
 
+cmake_policy(SET CMP0072 NEW) # Prefer GLVND to old GL when available
 find_package(OpenGL)
 if(NOT USE_FREEGLUT)
 	find_package(GLUT)
