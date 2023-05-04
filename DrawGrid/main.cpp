@@ -2398,7 +2398,8 @@ void draw_screen()
 			}
 			else
 			{
-				
+				//glLineWidth(4.0);
+				glLineWidth(1.5);
 				if( interactive )
 				{
 					glPrintError();
@@ -2426,6 +2427,7 @@ void draw_screen()
 					//~ std::cout << "draw edges passed" << std::endl;
 					glPrintError();
 				}
+				glLineWidth(1.0);
 			}
 		}
 		

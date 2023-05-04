@@ -92,13 +92,14 @@ namespace INMOST
 		colors.push_back(color_t(0.65, 0.25, 0.85));
 		colors.push_back(color_t(0.45, 0, 0.55));
 		//colors.push_back(color_t(0, 0, 0));
-		colors.push_back(color_t(0.25, 0.25, 0.25));
+		colors.push_back(color_t(0.35, 0.35, 0.35));
 #endif	
 		
 		//colors.push_back(color_t(1,0,0));
 	}
 
-	const color_t min_limit(0.5, 0, 0.8), max_limit(0.6,0,0);
+	//const color_t min_limit(0.5, 0, 0.8), max_limit(0.6,0,0);
+	const color_t min_limit(0.4, 1.0, 0.4), max_limit(0, 0.6, 0);
 
 
 	color_t color_bar::pick_color(float value) const
