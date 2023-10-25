@@ -281,20 +281,54 @@ int CellType(Cell c, TagReal tag_phi, double iso)
 	return ret;
 }
 
+void PhiGradient(const double x[4][3], const double phi[4], double ret[3])
+{
+	double A[9], b[3], det;
+	A[0] = x[1][0] - x[0][0];
+	A[1] = x[1][1] - x[0][1];
+	A[2] = x[1][2] - x[0][2];
+	b[0] = phi[1] - phi[0];
+	A[3] = x[2][0] - x[0][0];
+	A[4] = x[2][1] - x[0][1];
+	A[5] = x[2][2] - x[0][2];
+	b[1] = phi[2] - phi[0];
+	A[6] = x[3][0] - x[0][0];
+	A[7] = x[3][1] - x[0][1];
+	A[8] = x[3][2] - x[0][2];
+	b[2] = phi[3] - phi[0];
+	det = A[0] * (A[4] * A[8] - A[5] * A[7]) + A[1] * (A[5] * A[6] - A[3] * A[8]) + A[2] * (A[3] * A[7] - A[4] * A[6]);
+	ret[0] = -((A[4] * A[8] - A[5] * A[7]) * b[0] + (A[2] * A[7] - A[1] * A[8]) * b[1] + (A[1] * A[5] - A[2] * A[4]) * b[2]) / det;
+	ret[1] = -((A[5] * A[6] - A[3] * A[8]) * b[0] + (A[0] * A[8] - A[2] * A[6]) * b[1] + (A[2] * A[3] - A[0] * A[5]) * b[2]) / det;
+	ret[2] = -((A[3] * A[7] - A[4] * A[6]) * b[0] + (A[1] * A[6] - A[0] * A[7]) * b[1] + (A[0] * A[4] - A[1] * A[3]) * b[2]) / det;
+}
+
+void normalize(double v[3])
+{
+	double l = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+	if (l)
+	{
+		v[0] /= l;
+		v[1] /= l;
+		v[2] /= l;
+	}
+}
+
 
 std::vector<double> surfc; //array of coordinates of polygons of isosurface
 std::vector<int> surfn; //number of nodes in polygon of isosurface
+std::vector<double> surfnrm; //normal to each polygon
 
 void ComputeIsosurface(Mesh* mesh, TagReal tag_phi, double iso)
 {
 	surfc.clear();
 	surfn.clear();
+	surfnrm.clear();
 	for (int i = 0; i < mesh->CellLastLocalID(); i++) if( mesh->isValidCell(i))
 	{
 		Cell it = mesh->CellByLocalID(i);
 		if (CellType(it->self(), tag_phi,iso) == 0)
 		{
-			double xtet[4][3], phi[4], xsurf[4][3];
+			double xtet[4][3], phi[4], xsurf[4][3], grad[3];
 			if (it->GetGeometricType() == Element::Tet)
 			{
 				ElementArray<Node> nodes = it->getNodes();
@@ -312,6 +346,9 @@ void ComputeIsosurface(Mesh* mesh, TagReal tag_phi, double iso)
 					surfn.push_back(np);
 					for (int q = 0; q < np; ++q)
 						surfc.insert(surfc.end(), xsurf[q], xsurf[q] + 3);
+					PhiGradient(xtet, phi, grad);
+					normalize(grad);
+					surfnrm.insert(surfnrm.end(), grad, grad + 3);
 				}
 			}
 			else
@@ -343,6 +380,9 @@ void ComputeIsosurface(Mesh* mesh, TagReal tag_phi, double iso)
 							surfn.push_back(np);
 							for (int q = 0; q < np; ++q)
 								surfc.insert(surfc.end(), xsurf[q], xsurf[q] + 3);
+							PhiGradient(xtet, phi, grad);
+							normalize(grad);
+							surfnrm.insert(surfnrm.end(), grad, grad + 3);
 						}
 						xtet[2][0] = xtet[3][0];
 						xtet[2][1] = xtet[3][1];
@@ -2265,39 +2305,69 @@ void draw_screen()
 			dir[1] /= v;
 			dir[2] /= v;
 		}
-		float ambientlight[] = { 1.0,0.1,0.1,1.0 };
-		float diffuselight[] = { 1.0,0.5,0.5,1.0 };
-		float specular[] = { 1.0,1.0,1.0,1.0 };
-		//float lightpos[] = { campos[0],campos[1],campos[2],1.0 };
-		float lightpos[] = { sright,stop,sfar,1.0 };
-		float specref[] = { 1.0,1.0,1.0,1.0 };
-		float spotdir[] = { -1,-1,-1 };
+		
+		//float cdiffuse = 0.7, cambient = 0.35, cspecular = 1.0;
+		float cdiffuse = 0.8, cambient = 0.45, cspecular = 1.0;
+		//float ambientlight[] = { 1.0,0.1,0.1,1.0 };
+		float diffuselight[] = { cdiffuse,cdiffuse,cdiffuse,1.0 };
+		float ambientlight[] = { cambient,cambient,cambient,1.0 };
+		//float diffuselight[] = { 0.55,0.55,0.55,1.0 };
+		float specular[] = { cspecular,cspecular,cspecular,1.0 };
+		float lightpos[] = { campos[0],campos[1],campos[2],1.0 };
+		//float lightpos[] = { sright,stop,sfar,1.0 };
+		//float lightpos[] = {middle[0] - 1.*(sright-sleft),middle[1] + 1.*(stop - sbottom),middle[2] + 0.25*(sfar-snear),1.0};
+		//float lightpos[] = { dir[0],dir[1],dir[2],0. };
+		//float specref[] = { 1.0,1.0,1.0,1.0 };
+		//float spotdir[] = { -1,-1,-1 };
+		//float spotdir[] = { dir[0],dir[1],dir[2],1.0 };
 
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+		glEnable(GL_COLOR_MATERIAL);
+		glEnable(GL_NORMALIZE);
+		//glEnable(GL_AUTO_NORMAL);
+		
 		glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
 		glLightfv(GL_LIGHT0, GL_AMBIENT, ambientlight);
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuselight);
 		glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 		//glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 10.0);
-		//glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 15.0);
+		//glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 1.0);
 		//glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spotdir);
-		glEnable(GL_LIGHT0);
-		glEnable(GL_LIGHTING);
+		glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.0);
+		//glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.004);
+		//glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.8);
+
+		//glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, 0.5);
+		
+		
 		//glColor3f(0.65, 0.65, 0.75);
-		glColor3f(0.75, 0.35, 0.35);
+		//glColor3f(0.75, 0.35, 0.35);
+		//glColor3f(1.0,1.0,1.0);
+		//glColor3f(0.15, 0.15, 0.15);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0);
+		//glColor3f(0.65, 0.25, 0.85);
+		glColor3f(0.75, 0.45, 0.85);
 		q = 0;
 		for (size_t k = 0; k < surfn.size(); ++k)
 		{
 			size_t s = surfn[k] * 3;
 			glBegin(GL_TRIANGLE_FAN);
+			glNormal3dv(&surfnrm[k * 3]);
 			for (size_t l = q; l < q + s; l += 3)
 				glVertex3dv(&surfc[l]);
 			glEnd();
 			q += s;
 		}
-		glDisable(GL_LIGHTING);
-		glDisable(GL_LIGHT0);
+		//glDisable(GL_LIGHTING);
+		//glDisable(GL_LIGHT0);
+		
+		//glColor3f(0.15, 0.15, 0.15);
 		/*
-		glColor3f(0.6, 0.4, 0.4);
+		glLineWidth(4.0);
+		//glLineWidth(2.0);
+		//glLineWidth(1.0);
+		glColor3f(1.,1.,1.);
 		q = 0;
 		for (size_t k = 0; k < surfn.size(); ++k)
 		{
@@ -2308,7 +2378,10 @@ void draw_screen()
 			glEnd();
 			q += s;
 		}
+		glLineWidth(1.0);
 		*/
+		glDisable(GL_LIGHT0);
+		glDisable(GL_LIGHTING);
 	}
 
 	//glTranslated((l+r)*0.5,(b+t)*0.5,(near+far)*0.5);

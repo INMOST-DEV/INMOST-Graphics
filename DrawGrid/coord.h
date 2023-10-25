@@ -8,7 +8,7 @@ class coord
 	INMOST_DATA_REAL_TYPE p[3];
 public:
 	coord() { p[0] = p[1] = p[2] = 0; }
-	coord(INMOST_DATA_REAL_TYPE xyz[3]) { p[0] = xyz[0]; p[1] = xyz[1]; p[2] = xyz[2]; }
+	coord(const INMOST_DATA_REAL_TYPE xyz[3]) { p[0] = xyz[0]; p[1] = xyz[1]; p[2] = xyz[2]; }
 	coord(INMOST_DATA_REAL_TYPE x, INMOST_DATA_REAL_TYPE y, INMOST_DATA_REAL_TYPE z) { p[0] = x; p[1] = y; p[2] = z; }
 	coord(const coord & other) { p[0] = other.p[0]; p[1] = other.p[1]; p[2] = other.p[2]; }
 	coord & operator = (coord const & other) { p[0] = other.p[0]; p[1] = other.p[1]; p[2] = other.p[2]; return *this; }
