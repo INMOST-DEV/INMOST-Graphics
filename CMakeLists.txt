@@ -107,7 +107,8 @@ if(USE_PNG)
 
   ExternalProject_Add(PNG
                       GIT_REPOSITORY "git://git.code.sf.net/p/libpng/code"
-                      GIT_TAG "master"
+                      #GIT_TAG "master"
+                      GIT_TAG "f22945"
                       DEPENDS ZLIB
                       #URL "http://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.gz?download"
                       UPDATE_DISCONNECTED 1

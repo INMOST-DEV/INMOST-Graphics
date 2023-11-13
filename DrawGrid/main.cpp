@@ -348,6 +348,7 @@ void ComputeIsosurface(Mesh* mesh, TagReal tag_phi, double iso)
 						surfc.insert(surfc.end(), xsurf[q], xsurf[q] + 3);
 					PhiGradient(xtet, phi, grad);
 					normalize(grad);
+					for(int q = 0; q < 3; ++q) grad[q] *= -1.0;
 					surfnrm.insert(surfnrm.end(), grad, grad + 3);
 				}
 			}
@@ -2319,7 +2320,9 @@ void draw_screen()
 		//float lightpos[] = { dir[0],dir[1],dir[2],0. };
 		//float specref[] = { 1.0,1.0,1.0,1.0 };
 		//float spotdir[] = { -1,-1,-1 };
-		//float spotdir[] = { dir[0],dir[1],dir[2],1.0 };
+		float spotdir[] = { dir[0],dir[1],dir[2],1.0 };
+
+		//glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
@@ -2333,19 +2336,19 @@ void draw_screen()
 		glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 		//glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 10.0);
 		//glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 1.0);
-		//glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spotdir);
+		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spotdir);
 		glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.0);
 		//glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.004);
 		//glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.8);
 
 		//glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, 0.5);
-		
+		//glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 		
 		//glColor3f(0.65, 0.65, 0.75);
 		//glColor3f(0.75, 0.35, 0.35);
 		//glColor3f(1.0,1.0,1.0);
 		//glColor3f(0.15, 0.15, 0.15);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0);
+		//glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0);
 		//glColor3f(0.65, 0.25, 0.85);
 		glColor3f(0.75, 0.45, 0.85);
 		q = 0;
