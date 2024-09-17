@@ -611,13 +611,19 @@ void draw()
 
 int main(int argc, char ** argv)
 {
+	Solver::Initialize(&argc, &argv);
 	if( argc < 2 )
 	{
 		std::cout << "usage: " << argv[0] << " matrix.mtx [(text [width]|blocks.txt)]" << std::endl;
 		return -1;
 	}
 	m = new Sparse::Matrix();
-	m->Load(argv[1]);
+	if (std::string(argv[1]).find(".bin") != std::string::npos)
+	{
+		m->LoadBinary(argv[1]);
+		m->Save("conv.mtx");
+	}
+	else m->Load(argv[1]);
 	
 	if( argc > 2 )
 	{

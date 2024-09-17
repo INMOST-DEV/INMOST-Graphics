@@ -1003,10 +1003,11 @@ void keyboard(unsigned char key, int x, int y)
 	}
 	else if( key == 'q' )
 	{
-		mesh->Save("mesh.vtk");
+		mesh->SetFileOption("compress", "zlib");
+		//mesh->Save("mesh.vtk");
 		mesh->Save("mesh.pmf");
-		mesh->Save("mesh.xml");
-		mesh->Save("mesh.gmv");
+		//mesh->Save("mesh.xml");
+		//mesh->Save("mesh.gmv");
 	}
 	else if( key == 't' )
 	{
