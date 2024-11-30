@@ -383,6 +383,7 @@ void ComputeIsosurface(Mesh* mesh, TagReal tag_phi, double iso)
 								surfc.insert(surfc.end(), xsurf[q], xsurf[q] + 3);
 							PhiGradient(xtet, phi, grad);
 							normalize(grad);
+							for (int q = 0; q < 3; ++q) grad[q] *= -1.0;
 							surfnrm.insert(surfnrm.end(), grad, grad + 3);
 						}
 						xtet[2][0] = xtet[3][0];
@@ -2351,7 +2352,8 @@ void draw_screen()
 		//glColor3f(0.15, 0.15, 0.15);
 		//glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0);
 		//glColor3f(0.65, 0.25, 0.85);
-		glColor3f(0.75, 0.45, 0.85);
+		//glColor3f(0.75, 0.45, 0.85);
+		glColor3f(0.75, 0.25, 0.35);
 		q = 0;
 		for (size_t k = 0; k < surfn.size(); ++k)
 		{
@@ -2652,7 +2654,7 @@ void draw_screen()
 		top = display_elem_info(e,0.96,0.0,0.04);
 	}
 
-	if( disp_e.isValid() )
+	if( pick_element && disp_e.isValid() )
 		top = display_elem_info(disp_e,top+0.04,0.0,0.04);
 
 	if( CommonInput != NULL )

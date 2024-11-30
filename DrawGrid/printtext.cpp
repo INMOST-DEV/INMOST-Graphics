@@ -15,13 +15,13 @@ void printtext(const char * fmt, ...)
 	else
 		font = GLUT_BITMAP_TIMES_ROMAN_24;
 	unsigned int i;
-	char stext[131072];
+	static std::vector<char> stext(400000000);
 	va_list ap;
 	if (fmt == NULL) return;
 	va_start(ap, fmt);
-	vsprintf(stext, fmt, ap);
+	vsprintf(&stext[0], fmt, ap);
 	va_end(ap);
-	for (i = 0; i<strlen(stext); i++)
+	for (i = 0; i<strlen(&stext[0]); i++)
 	{
 		glutBitmapCharacter(font,
 			stext[i]);
